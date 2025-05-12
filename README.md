@@ -37,12 +37,12 @@ python mnist_cnn.py
 
 
 * **Training and Test Accuracy**
-  ![Accuracy](./path_to_accuracy_image.png)
+ ![image](https://github.com/user-attachments/assets/a0d8c785-72bc-406f-a213-42a35c745a4e)
+
 
 * **Sample Predictions**
-  ![Predictions](./path_to_predictions_image.png)
+ ![image](https://github.com/user-attachments/assets/d3559d3c-8166-447a-aad1-18f393d80057)
 
-> 📌 *Note: Make sure to place the `.png` images in the correct project directory and update the `path_to_*.png` placeholders accordingly.*
 
 ---
 
