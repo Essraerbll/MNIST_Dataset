@@ -33,7 +33,8 @@ python mnist_cnn.py
 ## 📊 Results
 
 * **Training and Test Loss**
-  ![Loss](./path_to_loss_image.png)
+ ![image](https://github.com/user-attachments/assets/a110fc80-3636-4a75-bfdb-a533e9fbf54e)
+
 
 * **Training and Test Accuracy**
   ![Accuracy](./path_to_accuracy_image.png)
@@ -64,8 +65,3 @@ python mnist_cnn.py
 ---
 
 
-MIT License. Feel free to use and modify this project as you wish. ✌
-
----
-
-Do you want me to include exact image paths if you have them?
