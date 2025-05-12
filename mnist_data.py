@@ -21,6 +21,9 @@ test_loader = DataLoader(
     batch_size=1000, shuffle=False
 )
 
+# Cihaz seçimi (CUDA varsa GPU, yoksa CPU kullanılır)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Model Tanımı
 class Net(nn.Module):
     def __init__(self):
@@ -42,15 +45,19 @@ class Net(nn.Module):
         x = self.dropout2(x)
         return F.log_softmax(self.fc2(x), dim=1)
 
-model = Net()
+# Modeli ve kriteri cihaza taşı
+model = Net().to(device)
 optimizer = optim.Adam(model.parameters())
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss().to(device)
 
 # Eğitim ve Test Fonksiyonları
 def train(epoch):
     model.train()
     total_loss, correct = 0, 0
     for data, target in train_loader:
+        # Verileri cihaza taşı
+        data, target = data.to(device), target.to(device)
+        
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
@@ -70,6 +77,9 @@ def test():
     total_loss, correct = 0, 0
     with torch.no_grad():
         for data, target in test_loader:
+            # Verileri cihaza taşı
+            data, target = data.to(device), target.to(device)
+            
             output = model(data)
             total_loss += criterion(output, target).item() * data.size(0)
             correct += (output.argmax(1) == target).sum().item()
@@ -79,11 +89,17 @@ def test():
     print(f"Test: Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%\n")
     return avg_loss, accuracy
 
+# Erken Durdurma Parametreleri
+early_stopping_patience = 3  # Kaç epoch boyunca iyileşme olmazsa durdurulacak
+best_loss = float('inf')  # En iyi (minimum) doğrulama kaybı
+patience_counter = 0  # Sabit kalan epoch sayacı
+
 # Eğitim Döngüsü
 train_losses, train_accuracies = [], []
 test_losses, test_accuracies = [], []
 
-for epoch in range(1, 11):
+for epoch in range(1, 101):  # Maksimum 100 epoch
+    print(f"Epoch {epoch}")
     t_loss, t_acc = train(epoch)
     v_loss, v_acc = test()
 
@@ -91,6 +107,21 @@ for epoch in range(1, 11):
     train_accuracies.append(t_acc)
     test_losses.append(v_loss)
     test_accuracies.append(v_acc)
+
+    # Erken durdurma kontrolü
+    if v_loss < best_loss:
+        best_loss = v_loss
+        patience_counter = 0  # İyileşme varsa sayaç sıfırlanır
+        torch.save(model.state_dict(), 'best_model.pth')  # En iyi modeli kaydet
+    else:
+        patience_counter += 1  # İyileşme yoksa sayaç artırılır
+
+    if patience_counter >= early_stopping_patience:
+        print("Erken durdurma tetiklendi.")
+        break
+
+# En iyi modeli yükle
+model.load_state_dict(torch.load('best_model.pth'))
 
 # Grafik Çizimi
 def plot_metrics(train_vals, test_vals, ylabel, title):
@@ -110,13 +141,15 @@ plot_metrics(train_accuracies, test_accuracies, 'Accuracy (%)', 'Accuracy Over E
 model.eval()
 with torch.no_grad():
     data, target = next(iter(test_loader))
+    # Verileri cihaza taşı
+    data, target = data.to(device), target.to(device)
     output = model(data)
     preds = output.argmax(1)
 
 fig = plt.figure(figsize=(12, 5))
 for i in range(10):
     plt.subplot(2, 5, i + 1)
-    plt.imshow(data[i][0], cmap='gray')
+    plt.imshow(data[i][0].cpu(), cmap='gray')
     plt.title(f"Pred: {preds[i].item()}\nTrue: {target[i].item()}")
     plt.axis('off')
 plt.tight_layout()
@@ -124,6 +157,6 @@ plt.show()
 
 # Model Kaydet / Yükle
 torch.save(model.state_dict(), 'mnist_cnn.pth')
-loaded_model = Net()
+loaded_model = Net().to(device)
 loaded_model.load_state_dict(torch.load('mnist_cnn.pth'))
 loaded_model.eval()
