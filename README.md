@@ -25,7 +25,7 @@ pip install torch torchvision matplotlib numpy
 ## 🚀 How to Run
 
 ```bash
-python mnist_cnn.py
+python mnist_data.py
 ```
 
 ---
